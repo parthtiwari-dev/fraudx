@@ -24,7 +24,7 @@ Created: 2025-09-11
 """
 
 import csv
-import requests
+import requests # type: ignore
 import json
 
 def pipeline(source, source_type='csv'):
