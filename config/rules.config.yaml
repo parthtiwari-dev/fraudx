@@ -1,0 +1,6 @@
+rules:
+  - type: "RapidTransactionsRule"
+    max_txns: 3
+    window_minutes: 1
+  - type: "LargeTransactionRule"
+    threshold: 10000.0
