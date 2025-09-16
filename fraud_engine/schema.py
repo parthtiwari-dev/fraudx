@@ -21,7 +21,7 @@ Typical usage:
     # Now safe for rule processing
 """
 from fraud_engine.exceptions import InvalidTransactionError
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError 
 from datetime import datetime
 
 
