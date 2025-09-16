@@ -1,37 +1,67 @@
-# FraudX - Advanced Fraud Detection System
+# FraudX - Rule-Based Fraud Detection Engine
 
 ## Overview
 
-FraudX is a comprehensive fraud detection system designed to identify and prevent fraudulent activities across various financial transactions and digital platforms. Built with machine learning algorithms and real-time monitoring capabilities, FraudX provides robust protection against emerging fraud patterns.
+FraudX is a Python-based fraud detection engine that processes transaction data through configurable rule sets to identify potentially fraudulent activities. The system is built around a modular architecture with pluggable rules, schema validation, and comprehensive logging.
 
-## Features
+## Project Structure
 
-### Core Capabilities
-- **Real-time Transaction Monitoring**: Continuous analysis of transaction patterns
-- **Machine Learning Detection**: Advanced ML models for fraud pattern recognition
-- **Risk Scoring**: Dynamic risk assessment for each transaction
-- **Alert System**: Immediate notifications for suspicious activities
-- **Dashboard Analytics**: Comprehensive reporting and visualization
-- **API Integration**: Easy integration with existing systems
+```
+fraudx/
+├── fraud_engine/           # Core detection engine
+│   ├── rules/              # Rule implementations
+│   │   ├── base.py         # Abstract rule interface
+│   │   ├── rapid_transaction_rule.py  # Detects rapid transactions
+│   │   └── other_rules.py  # Large transaction rules
+│   ├── detector.py         # Main fraud detector orchestrator
+│   ├── pipeline.py         # Data ingestion pipeline (CSV/JSON/API)
+│   ├── schema.py           # Transaction data validation
+│   ├── exceptions.py       # Custom exception classes
+│   ├── profiler.py         # User behavior profiling
+│   ├── decorators.py       # Performance and logging decorators
+│   └── utils.py            # Utility functions
+├── config/                 # Configuration files
+│   ├── logging.yaml        # Logging configuration
+│   └── rules.config.yaml   # Rule configuration (max_txns, thresholds)
+├── data/                   # Sample data
+│   └── sample_transaction.csv  # 201 sample transactions for testing
+├── scripts/                # Executable scripts
+│   ├── run_detection.py    # Main script to run fraud detection
+│   └── profile_engine.py   # User profiling script
+├── tests/                  # Test suite
+│   ├── test_detector.py    # Tests for fraud detector
+│   ├── test_pipeline.py    # Tests for data pipeline
+│   ├── test_rules.py       # Tests for fraud rules
+│   └── other_test.py       # Additional tests
+├── notebooks/              # Analysis notebooks
+│   └── fraud_analysis.ipynb  # Jupyter notebook for analysis
+├── logs/                   # Generated log files
+└── docs/                   # Documentation (placeholder)
+```
 
-### Advanced Features
-- **Behavioral Analysis**: User behavior pattern recognition
-- **Geolocation Tracking**: Location-based fraud detection
-- **Device Fingerprinting**: Device identification and tracking
-- **Rules Engine**: Customizable fraud detection rules
-- **Historical Analysis**: Trend analysis and pattern recognition
-- **Multi-channel Support**: Web, mobile, and API fraud detection
+## Core Components
 
-## Installation
+### 1. Fraud Detection Engine
+- **detector.py**: Central orchestrator that applies rules to transactions
+- **schema.py**: Pydantic-based validation for transaction data structure
+- **pipeline.py**: Streaming data ingestion from CSV, JSON, or API sources
+
+### 2. Rule System
+- **base.py**: Abstract Rule class that all fraud rules must implement
+- **rapid_transaction_rule.py**: Flags users making >N transactions in M minutes
+- **other_rules.py**: Simple threshold-based rules (large amount detection)
+
+### 3. Configuration
+- **rules.config.yaml**: Rule parameters (max_txns: 3, window_minutes: 1, threshold: 10000)
+- **logging.yaml**: Structured logging to console and files
+
+## Installation & Setup
 
 ### Prerequisites
 - Python 3.8+
-- PostgreSQL 12+
-- Redis 6.0+
-- Docker (optional)
+- pip
 
 ### Quick Start
-
 ```bash
 # Clone the repository
 git clone https://github.com/parthtiwari-dev/fraudx.git
@@ -40,307 +70,158 @@ cd fraudx
 # Install dependencies
 pip install -r requirements.txt
 
-# Set up environment variables
-cp .env.example .env
-# Edit .env with your configuration
-
-# Run database migrations
-python manage.py migrate
-
-# Start the application
-python manage.py runserver
+# Run fraud detection on sample data
+python scripts/run_detection.py
 ```
 
-### Docker Installation
-
-```bash
-# Build and run with Docker Compose
-docker-compose up --build
-```
-
-## Configuration
-
-### Environment Variables
-
-```env
-# Database Configuration
-DATABASE_URL=postgresql://user:password@localhost:5432/fraudx
-
-# Redis Configuration
-REDIS_URL=redis://localhost:6379/0
-
-# API Configuration
-API_KEY=your-secret-api-key
-API_RATE_LIMIT=1000
-
-# ML Model Configuration
-MODEL_THRESHOLD=0.75
-MODEL_UPDATE_INTERVAL=3600
-
-# Alert Configuration
-ALERT_EMAIL=admin@company.com
-SMTP_HOST=smtp.company.com
-SMTP_PORT=587
-```
-
-### ML Model Configuration
-
-```python
-# config/ml_config.py
-ML_CONFIG = {
-    'models': {
-        'transaction_fraud': {
-            'algorithm': 'random_forest',
-            'features': ['amount', 'merchant_category', 'time_of_day'],
-            'threshold': 0.8
-        },
-        'account_takeover': {
-            'algorithm': 'neural_network',
-            'features': ['login_location', 'device_fingerprint', 'behavior_score'],
-            'threshold': 0.85
-        }
-    }
-}
-```
+### Dependencies
+- **pydantic==2.11.0**: Data validation and schema definition
+- **python-dateutil>=2.9.0**: Date/time parsing utilities
+- **pytz>=2024.1**: Timezone handling
+- **pytest>=8.0.0**: Testing framework
+- **requests**: API data ingestion (used in pipeline.py)
+- **pyyaml**: Configuration file parsing
 
 ## Usage
 
-### API Endpoints
+### Running Detection
+The main script processes the sample transaction data through all configured rules:
 
-#### Transaction Analysis
 ```bash
-# Analyze a single transaction
-curl -X POST http://localhost:8000/api/analyze \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "transaction_id": "txn_123456",
-    "amount": 1500.00,
-    "merchant_id": "merchant_789",
-    "user_id": "user_456",
-    "timestamp": "2025-09-17T01:00:00Z"
-  }'
+python scripts/run_detection.py
 ```
 
-#### Batch Analysis
-```bash
-# Analyze multiple transactions
-curl -X POST http://localhost:8000/api/batch-analyze \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "transactions": [
-      {"transaction_id": "txn_1", "amount": 100.00},
-      {"transaction_id": "txn_2", "amount": 2000.00}
-    ]
-  }'
+This will:
+1. Load transaction data from `data/sample_transaction.csv`
+2. Apply rules from `config/rules.config.yaml`
+3. Generate fraud alerts in `logs/fraud_alerts.csv`
+4. Output summary statistics and user profiles
+5. Log all activities to `logs/fraud_engine.log`
+
+### Sample Transaction Format
+```csv
+transaction_id,user_id,amount,timestamp,location,payment_method
+1,U117,4126.39,2025-09-01 08:20:06,Hyderabad,NetBanking
+2,U108,2946.32,2025-09-01 10:05:40,Indore,CreditCard
 ```
 
-#### User Risk Assessment
-```bash
-# Get user risk score
-curl -X GET http://localhost:8000/api/users/user_456/risk-score \
-  -H "Authorization: Bearer YOUR_API_KEY"
+### Rule Configuration
+Edit `config/rules.config.yaml` to adjust detection parameters:
+```yaml
+rules:
+  - type: "RapidTransactionsRule"
+    max_txns: 3
+    window_minutes: 1
+  - type: "LargeTransactionRule"
+    threshold: 10000.0
 ```
 
-### Python SDK
-
+### Programmatic Usage
 ```python
-from fraudx import FraudXClient
+from fraud_engine.detector import FraudDetector
+from fraud_engine.rules.rapid_transaction_rule import RapidTransactionsRule
+from fraud_engine.rules.other_rules import LargeTransactionRule
+from fraud_engine.pipeline import pipeline
 
-# Initialize client
-client = FraudXClient(api_key='your-api-key')
+# Setup rules
+rules = [
+    RapidTransactionsRule(max_txns=3, window_minutes=1),
+    LargeTransactionRule(threshold=5000.0)
+]
+detector = FraudDetector(rules)
 
-# Analyze transaction
-result = client.analyze_transaction({
-    'transaction_id': 'txn_123456',
-    'amount': 1500.00,
-    'merchant_id': 'merchant_789',
-    'user_id': 'user_456'
-})
-
-print(f"Risk Score: {result.risk_score}")
-print(f"Is Fraudulent: {result.is_fraud}")
-print(f"Reasons: {result.fraud_indicators}")
+# Process transactions
+for txn in pipeline("data/sample_transaction.csv", source_type="csv"):
+    result = detector.evaluate(txn)
+    if result["is_fraud"]:
+        print(f"FRAUD DETECTED: {txn.transaction_id} - {result['flags']}")
 ```
-
-### Dashboard Access
-
-Access the web dashboard at `http://localhost:8000/dashboard`
-
-- **Real-time Monitoring**: View live transaction analysis
-- **Reports**: Generate fraud detection reports
-- **Configuration**: Manage detection rules and thresholds
-- **User Management**: Manage system users and permissions
-
-## Architecture
-
-### System Components
-
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Web Client    │    │   Mobile App    │    │   Third-party   │
-│                 │    │                 │    │   Integration   │
-└─────────┬───────┘    └─────────┬───────┘    └─────────┬───────┘
-          │                      │                      │
-          └──────────────────────┼──────────────────────┘
-                                 │
-                    ┌─────────────┴───────────────┐
-                    │        API Gateway          │
-                    └─────────────┬───────────────┘
-                                  │
-                    ┌─────────────┴───────────────┐
-                    │     Fraud Detection         │
-                    │        Engine               │
-                    └─────────────┬───────────────┘
-                                  │
-                    ┌─────────────┴───────────────┐
-                    │    Machine Learning         │
-                    │       Models                │
-                    └─────────────┬───────────────┘
-                                  │
-                    ┌─────────────┴───────────────┐
-                    │      Database               │
-                    │   (PostgreSQL + Redis)      │
-                    └─────────────────────────────┘
-```
-
-### Data Flow
-
-1. **Transaction Input**: Transactions received via API
-2. **Feature Extraction**: Relevant features extracted from transaction data
-3. **ML Analysis**: Machine learning models analyze patterns
-4. **Risk Scoring**: Risk score calculated based on multiple factors
-5. **Decision Making**: Fraud determination based on thresholds
-6. **Alert Generation**: Notifications sent for high-risk transactions
-7. **Feedback Loop**: Model improvement based on outcomes
-
-## Contributing
-
-We welcome contributions to FraudX! Please read our contributing guidelines:
-
-### Development Setup
-
-```bash
-# Fork and clone the repository
-git clone https://github.com/YOUR_USERNAME/fraudx.git
-cd fraudx
-
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install development dependencies
-pip install -r requirements-dev.txt
-
-# Install pre-commit hooks
-pre-commit install
-
-# Run tests
-pytest
-```
-
-### Code Style
-
-- Follow PEP 8 guidelines
-- Use Black for code formatting
-- Add type hints for better code documentation
-- Write comprehensive tests for new features
-
-### Submitting Changes
-
-1. Create a feature branch: `git checkout -b feature/your-feature`
-2. Make your changes and add tests
-3. Run the test suite: `pytest`
-4. Commit your changes: `git commit -m "Add your feature"`
-5. Push to your branch: `git push origin feature/your-feature`
-6. Submit a Pull Request
 
 ## Testing
 
-### Running Tests
-
+Run the test suite:
 ```bash
 # Run all tests
 pytest
 
-# Run with coverage
-pytest --cov=fraudx
-
 # Run specific test file
-pytest tests/test_fraud_detection.py
+pytest tests/test_detector.py
 
-# Run tests with verbose output
-pytest -v
+# Run with coverage
+pytest --cov=fraud_engine
 ```
 
-### Test Categories
+## Extending the System
 
-- **Unit Tests**: Test individual components
-- **Integration Tests**: Test component interactions
-- **API Tests**: Test API endpoints
-- **Performance Tests**: Test system performance
+### Creating New Rules
+1. Create a new rule class inheriting from `Rule`:
+```python
+from fraud_engine.rules.base import Rule
+from fraud_engine.schema import Transaction
 
-## Deployment
-
-### Production Deployment
-
-```bash
-# Using Docker
-docker build -t fraudx:latest .
-docker run -d -p 8000:8000 --env-file .env fraudx:latest
-
-# Using Kubernetes
-kubectl apply -f k8s/
-
-# Using traditional deployment
-gunicorn --bind 0.0.0.0:8000 --workers 4 fraudx.wsgi:application
+class MyCustomRule(Rule):
+    def __init__(self, threshold=1000):
+        self.threshold = threshold
+    
+    def check(self, transaction: Transaction) -> bool:
+        # Your fraud detection logic here
+        return transaction.amount > self.threshold
 ```
 
-### Environment-specific Configurations
+2. Add it to the rule registry in `scripts/run_detection.py`
+3. Configure it in `config/rules.config.yaml`
 
-- **Development**: Debug mode enabled, detailed logging
-- **Staging**: Production-like environment for testing
-- **Production**: Optimized for performance and security
+### Adding New Data Sources
+Extend `pipeline.py` to support new data formats or sources.
+
+## Architecture
+
+The system follows a clean, modular architecture:
+
+1. **Data Ingestion**: `pipeline.py` streams validated transactions
+2. **Rule Engine**: `detector.py` applies all configured rules
+3. **Validation**: `schema.py` ensures data integrity using Pydantic
+4. **Profiling**: `profiler.py` tracks user behavior patterns
+5. **Logging**: Comprehensive logging for monitoring and debugging
+
+## Output
+
+### Console Output
+- Real-time fraud alerts
+- Processing statistics
+- Top triggered rules
+- User behavior profiles
+
+### Generated Files
+- `logs/fraud_alerts.csv`: All flagged transactions with reasons
+- `logs/fraud_engine.log`: Detailed processing logs
+
+## Current Limitations
+
+- Rules are stateful but not persisted between runs
+- No database integration (file-based processing)
+- Limited to two basic rule types
+- No web interface or API endpoints
+- No machine learning components (pure rule-based)
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature`
+3. Add tests for new functionality
+4. Run tests: `pytest`
+5. Commit changes: `git commit -m 'Add your feature'`
+6. Push to branch: `git push origin feature/your-feature`
+7. Submit a Pull Request
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License.
 
-## Support
+## Author
 
-### Documentation
-- [API Documentation](https://docs.fraudx.com/api)
-- [User Guide](https://docs.fraudx.com/guide)
-- [FAQ](https://docs.fraudx.com/faq)
-
-### Community
-- [GitHub Issues](https://github.com/parthtiwari-dev/fraudx/issues)
-- [Discussions](https://github.com/parthtiwari-dev/fraudx/discussions)
-- [Discord Channel](https://discord.gg/fraudx)
-
-### Commercial Support
-For enterprise support and custom implementations, contact us at support@fraudx.com
-
-## Changelog
-
-### Version 2.1.0 (2025-09-17)
-- Added behavioral analysis features
-- Improved ML model accuracy
-- Enhanced dashboard UI
-- Added batch processing capabilities
-
-### Version 2.0.0 (2025-08-15)
-- Major architecture redesign
-- Real-time processing engine
-- New API endpoints
-- Performance improvements
-
-### Version 1.5.0 (2025-07-10)
-- Added device fingerprinting
-- Enhanced geolocation features
-- Bug fixes and stability improvements
+Parth Tiwari
 
 ---
 
-**FraudX** - Protecting your business from fraud, one transaction at a time.
+**Note**: This is a rule-based fraud detection engine focused on transaction analysis. It processes data in batch mode and is designed for integration into larger fraud prevention systems.
