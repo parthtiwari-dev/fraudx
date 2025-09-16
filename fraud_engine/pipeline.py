@@ -22,39 +22,51 @@ Typical usage:
 Author: Parth Tiwari
 Created: 2025-09-11
 """
-
 import csv
-import requests # type: ignore
+import requests  # type: ignore
 import json
+from fraud_engine.schema import validate_transaction
+from fraud_engine.exceptions import InvalidTransactionError
+
 
 def pipeline(source, source_type='csv'):
     """
-    Generic pipeline to read data from CSV, JSON, or API.
+    Generic pipeline to read data from CSV, JSON, or API
+    and validate each record using schema.py.
     
     Args:
         source (str): Path to file or API endpoint.
         source_type (str): 'csv', 'json', or 'api'
         
     Yields:
-        dict: One record at a time
+        Transaction: Validated Pydantic Transaction object
     """
     if source_type == 'csv':
         with open(source, mode="r", encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for row in reader:
-                yield row
+                try:
+                    yield validate_transaction(row)
+                except InvalidTransactionError as e:
+                    print(f"Skipping invalid transaction: {e}")
 
     elif source_type == 'json':
         with open(source, mode="r", encoding="utf-8") as f:
             data = json.load(f)
             for row in data:
-                yield row
+                try:
+                    yield validate_transaction(row)
+                except InvalidTransactionError as e:
+                    print(f"Skipping invalid transaction: {e}")
 
     elif source_type == 'api':
         response = requests.get(source)
         data = response.json()
         for row in data:
-            yield row
+            try:
+                yield validate_transaction(row)
+            except InvalidTransactionError as e:
+                print(f"Skipping invalid transaction: {e}")
 
     else:
         raise ValueError("Unsupported source_type. Use 'csv', 'json', or 'api'.")
