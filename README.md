@@ -71,7 +71,7 @@ cd fraudx
 pip install -r requirements.txt
 
 # Run fraud detection on sample data
-python scripts/run_detection.py
+python -m run_detection
 ```
 
 ### Dependencies
