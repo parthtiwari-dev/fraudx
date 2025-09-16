@@ -23,33 +23,23 @@ Typical usage:
 from fraud_engine.exceptions import InvalidTransactionError
 from pydantic import BaseModel, Field, ValidationError 
 from datetime import datetime
-
+from typing import Optional
 
 class Transaction(BaseModel):
     transaction_id: str
     user_id: str
-    merchant_id: str
     amount: float
     timestamp: datetime
-    # Optional extra fields can be added here
+    location: str
+    payment_method: str
+    merchant_id: Optional[str] = None   # 👈 not required anymore
 
 def validate_transaction(raw_txn: dict):
     """
     Validate and normalize a single transaction record.
-    
-    Args:
-        raw_txn (dict): Raw transaction data.
-    
-    Returns:
-        Transaction: Validated and type-safe transaction object.
-    
-    Raises:
-        InvalidTransactionError: If validation fails.
     """
     try:
         txn = Transaction(**raw_txn)
         return txn
     except ValidationError as e:
         raise InvalidTransactionError(f"Transaction validation failed: {e}")
-
-

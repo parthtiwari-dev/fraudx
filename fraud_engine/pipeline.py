@@ -25,6 +25,7 @@ Created: 2025-09-11
 import csv
 import requests  # type: ignore
 import json
+import os
 from fraud_engine.schema import validate_transaction
 from fraud_engine.exceptions import InvalidTransactionError
 
@@ -42,7 +43,11 @@ def pipeline(source, source_type='csv'):
         Transaction: Validated Pydantic Transaction object
     """
     if source_type == 'csv':
-        with open(source, mode="r", encoding="utf-8") as f:
+        # Build absolute path relative to project root
+        base_dir = os.path.dirname(os.path.dirname(__file__))  # fraudx/
+        file_path = os.path.join(base_dir, source)
+
+        with open(file_path, mode="r", encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for row in reader:
                 try:
@@ -51,7 +56,10 @@ def pipeline(source, source_type='csv'):
                     print(f"Skipping invalid transaction: {e}")
 
     elif source_type == 'json':
-        with open(source, mode="r", encoding="utf-8") as f:
+        base_dir = os.path.dirname(os.path.dirname(__file__))
+        file_path = os.path.join(base_dir, source)
+
+        with open(file_path, mode="r", encoding="utf-8") as f:
             data = json.load(f)
             for row in data:
                 try:
